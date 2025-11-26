@@ -14,8 +14,7 @@ jobs:
         run: |
           projects=(
             "https://sjipwstkvvrautexigmt.supabase.co/rest/v1"
-            "https://project2.supabase.co/rest/v1"
-            "https://project3.supabase.co/rest/v1"
+            "https://nvwabjwlzzelzkizblss.supabase.co/rest/v1"
           )
 
           for url in "${projects[@]}"
