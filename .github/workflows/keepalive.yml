@@ -2,14 +2,24 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: "0 */12 * * *"   # تشغيل كل 12 ساعة
-  workflow_dispatch:         # تشغيل يدوي لو عايز
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Curl Supabase Endpoint
+      - name: Ping all projects
         run: |
-          curl -I https://sjipwstkvvrautexigmt.supabase.co/rest/v1
+          projects=(
+            "https://sjipwstkvvrautexigmt.supabase.co/rest/v1"
+            "https://project2.supabase.co/rest/v1"
+            "https://project3.supabase.co/rest/v1"
+          )
+
+          for url in "${projects[@]}"
+          do
+            echo "Pinging $url"
+            curl -I $url
+          done
