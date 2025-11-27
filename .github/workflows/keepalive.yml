@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ping all projects
+      - name: Ping Supabase Projects
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           projects=(
             "https://sjipwstkvvrautexigmt.supabase.co/rest/v1"
@@ -20,5 +22,8 @@ jobs:
           for url in "${projects[@]}"
           do
             echo "Pinging $url"
-            curl -I $url
+            curl -I \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY_1" \
+              $url
           done
