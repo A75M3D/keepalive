@@ -2,7 +2,7 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: "0 */12 * * *"   # كل 12 ساعة (صححت التوقيت)
+    - cron: "0 */1 * * *"   # كل 12 ساعة (صححت التوقيت)
   workflow_dispatch:
 
 jobs:
