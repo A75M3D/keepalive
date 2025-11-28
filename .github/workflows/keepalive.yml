@@ -2,7 +2,7 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: "0 */1 * * *"   # كل 12 ساعة
+    - cron: "0 */12 * * *"   # كل 12 ساعة (صححت التوقيت)
   workflow_dispatch:
 
 jobs:
@@ -12,20 +12,35 @@ jobs:
     steps:
       - name: Ping Supabase Projects
         env:
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY_1: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY_2: ${{ secrets.SUPABASE_ANON_KEY_1 }}
         run: |
           set -euo pipefail
 
+          # مصفوفة المشاريع مع المفاتيح الخاصة بكل واحد
           projects=(
-            "https://sjtpwstkvvrautexigut.supabase.co/rest/v1/"
-            "https://nvuabiwizzeizkizhiss.supabase.co/rest/v1/"
+            "https://sjtpwstkvvrautexigut.supabase.co|$SUPABASE_ANON_KEY"
+            "https://nvuabiwizzeizkizhiss.supabase.co|$SUPABASE_ANON_KEY_1"
           )
 
-          for url in "${projects[@]}"
+          for project in "${projects[@]}"
           do
-            echo "Pinging $url"
-            curl -I \
-              -H "apikey: $SUPABASE_ANON_KEY" \
-              -H "Authorization: Bearer $SUPABASE_ANON_KEY_1" \
-              "$url"
+            # فصل الرابط عن المفتاح
+            IFS='|' read -r url key <<< "$project"
+            echo "🔄 جاري ping للرابط: $url"
+            
+            # استخدام curl مع تحكم أفضل في الأخطاء
+            response_code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "apikey: $key" \
+              -H "Authorization: Bearer $key" \
+              -H "Content-Type: application/json" \
+              "$url" || echo "CURL_FAILED")
+            
+            if [ "$response_code" == "200" ] || [ "$response_code" == "301" ] || [ "$response_code" == "302" ]; then
+              echo "✅ النجاح: $url - كود الاستجابة: $response_code"
+            else
+              echo "❌ فشل: $url - كود الاستجابة: $response_code"
+              # لا نوقف العملية كلياً عند فشل أحد المشاريع
+            fi
+            echo "---"
           done
