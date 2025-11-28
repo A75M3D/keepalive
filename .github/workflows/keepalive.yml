@@ -2,45 +2,37 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: "0 */1 * * *"   # كل 12 ساعة (صححت التوقيت)
+    - cron: "0 */1 * * *"
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-
     steps:
       - name: Ping Supabase Projects
         env:
-          SUPABASE_ANON_KEY_1: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_ANON_KEY_2: ${{ secrets.SUPABASE_ANON_KEY_1 }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY_1: ${{ secrets.SUPABASE_ANON_KEY_1 }}
         run: |
-          set -euo pipefail
-
-          # مصفوفة المشاريع مع المفاتيح الخاصة بكل واحد
           projects=(
-            "https://sjtpwstkvvrautexigut.supabase.co|$SUPABASE_ANON_KEY"
-            "https://nvuabiwizzeizkizhiss.supabase.co|$SUPABASE_ANON_KEY_1"
+            "https://sjtpwstkvvrautexigut.supabase.co|$SUPABASE_ANON_KEY|users_profiles"
+            "https://nvuabiwizzeizkizhiss.supabase.co|$SUPABASE_ANON_KEY_1|products"
           )
 
           for project in "${projects[@]}"
           do
-            # فصل الرابط عن المفتاح
-            IFS='|' read -r url key <<< "$project"
-            echo "🔄 جاري ping للرابط: $url"
+            IFS='|' read -r url key table <<< "$project"
+            echo "🔄 جاري ping: $url - الجدول: $table"
             
-            # استخدام curl مع تحكم أفضل في الأخطاء
             response_code=$(curl -s -o /dev/null -w "%{http_code}" \
               -H "apikey: $key" \
               -H "Authorization: Bearer $key" \
-              -H "Content-Type: application/json" \
-              "$url" || echo "CURL_FAILED")
+              "$url/rest/v1/${table}?select=id&limit=1" || echo "FAILED")
             
-            if [ "$response_code" == "200" ] || [ "$response_code" == "301" ] || [ "$response_code" == "302" ]; then
-              echo "✅ النجاح: $url - كود الاستجابة: $response_code"
+            if [ "$response_code" == "200" ]; then
+              echo "✅ نجاح: $url"
             else
-              echo "❌ فشل: $url - كود الاستجابة: $response_code"
-              # لا نوقف العملية كلياً عند فشل أحد المشاريع
+              echo "❌ فشل: $url - كود: $response_code"
             fi
             echo "---"
           done
